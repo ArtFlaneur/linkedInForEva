@@ -1,6 +1,6 @@
 import React from 'react';
 import { GeneratedPost as GeneratedPostType } from '../types';
-import { Copy, Check, RefreshCw, ExternalLink } from 'lucide-react';
+import { Copy, Check, RefreshCw, ExternalLink, Linkedin, Twitter, Send, Instagram, Youtube } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface GeneratedPostProps {
@@ -8,9 +8,11 @@ interface GeneratedPostProps {
   onReset: () => void;
 }
 
+type Tab = 'linkedin' | 'twitter' | 'telegram' | 'instagram' | 'youtube';
+
 export const GeneratedPost: React.FC<GeneratedPostProps> = ({ post, onReset }) => {
   const [copied, setCopied] = React.useState(false);
-  const [shortCopied, setShortCopied] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<Tab>('linkedin');
 
   if (!post) {
     return (
@@ -26,24 +28,47 @@ export const GeneratedPost: React.FC<GeneratedPostProps> = ({ post, onReset }) =
 
   const cleanText = (text: string) => {
     return text
+      .replace(/—/g, '--') // Force replace em dash with double hyphen
       .replace(/\*\*/g, '') // Remove bold markers
       .replace(/^\s*\*\s/gm, '- ') // Convert asterisk bullets to hyphens
       .replace(/\*/g, ''); // Remove remaining italic markers
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(cleanText(post.content));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Helper to remove em dashes for display
+  const displayContent = (text: string) => {
+    return text.replace(/—/g, '--');
   };
 
-  const handleShortCopy = () => {
-    if (post.shortContent) {
-        navigator.clipboard.writeText(cleanText(post.shortContent));
-        setShortCopied(true);
-        setTimeout(() => setShortCopied(false), 2000);
+  const handleCopy = () => {
+    const contentToCopy = activeTab === 'linkedin' ? post.content :
+                          activeTab === 'twitter' ? post.shortContent :
+                          activeTab === 'telegram' ? post.telegramContent :
+                          activeTab === 'instagram' ? post.instagramContent :
+                          activeTab === 'youtube' ? post.youtubeContent : '';
+    
+    if (contentToCopy) {
+        navigator.clipboard.writeText(cleanText(contentToCopy));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  const renderTabButton = (id: Tab, icon: React.ReactNode, label: string, disabled: boolean) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      disabled={disabled}
+      className={`flex items-center px-3 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 ${
+        activeTab === id 
+          ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' 
+          : disabled 
+            ? 'border-transparent text-slate-300 cursor-not-allowed' 
+            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+      }`}
+    >
+      {icon}
+      <span className="ml-2 hidden sm:inline">{label}</span>
+    </button>
+  );
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden flex flex-col h-full">
@@ -62,31 +87,49 @@ export const GeneratedPost: React.FC<GeneratedPostProps> = ({ post, onReset }) =
             </button>
         </div>
       </div>
-      
-      <div className="flex-1 p-6 overflow-y-auto max-h-[600px] prose prose-slate prose-indigo max-w-none">
-        <ReactMarkdown>{post.content}</ReactMarkdown>
 
-        {/* Short Version Section */}
-        {post.shortContent && (
-          <div className="mt-8 pt-6 border-t border-slate-200 not-prose">
-            <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide">X / Threads Version</h4>
-                <button
-                    onClick={handleShortCopy}
-                    className={`text-xs flex items-center font-medium transition-colors ${shortCopied ? 'text-green-600' : 'text-indigo-600 hover:text-indigo-800'}`}
+      {/* Tabs */}
+      <div className="flex px-4 border-b border-slate-200 overflow-x-auto">
+        {renderTabButton('linkedin', <Linkedin size={16} />, 'LinkedIn', false)}
+        {renderTabButton('twitter', <Twitter size={16} />, 'X / Threads', !post.shortContent)}
+        {renderTabButton('telegram', <Send size={16} />, 'Telegram', !post.telegramContent)}
+        {renderTabButton('instagram', <Instagram size={16} />, 'Instagram', !post.instagramContent)}
+        {renderTabButton('youtube', <Youtube size={16} />, 'YouTube', !post.youtubeContent)}
+      </div>
+      
+      <div className="flex-1 p-6 prose prose-slate prose-indigo max-w-none">
+        
+        {/* Alternative Hooks Section - Only for LinkedIn */}
+        {activeTab === 'linkedin' && post.alternativeHooks && post.alternativeHooks.length > 0 && (
+          <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100 not-prose">
+            <h4 className="text-xs font-bold text-indigo-800 uppercase tracking-wide mb-2">🧪 Hook Lab (Alternative Openers)</h4>
+            <ul className="space-y-2">
+              {post.alternativeHooks.map((hook, idx) => (
+                <li key={idx} className="text-sm text-indigo-900 flex items-start group cursor-pointer hover:bg-indigo-100 p-1.5 rounded transition-colors"
+                    onClick={() => {
+                        navigator.clipboard.writeText(cleanText(hook));
+                    }}
+                    title="Click to copy hook"
                 >
-                    {shortCopied ? <Check size={12} className="mr-1" /> : <Copy size={12} className="mr-1" />}
-                    {shortCopied ? 'Copied' : 'Copy'}
-                </button>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap font-sans">
-                {post.shortContent}
-            </div>
+                  <span className="text-indigo-400 mr-2 font-mono text-xs mt-0.5">{idx + 1}.</span>
+                  <span>{displayContent(hook)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
-        {/* Source Links Section */}
-        {post.sourceLinks && post.sourceLinks.length > 0 && (
+        {/* Content Area */}
+        <div className="min-h-[200px]">
+            {activeTab === 'linkedin' && <ReactMarkdown>{displayContent(post.content)}</ReactMarkdown>}
+            {activeTab === 'twitter' && <div className="whitespace-pre-wrap font-sans text-slate-700">{displayContent(post.shortContent || '')}</div>}
+            {activeTab === 'telegram' && <div className="whitespace-pre-wrap font-sans text-slate-700">{displayContent(post.telegramContent || '')}</div>}
+            {activeTab === 'instagram' && <div className="whitespace-pre-wrap font-sans text-slate-700">{displayContent(post.instagramContent || '')}</div>}
+            {activeTab === 'youtube' && <div className="whitespace-pre-wrap font-sans text-slate-700">{displayContent(post.youtubeContent || '')}</div>}
+        </div>
+
+        {/* Source Links Section - Only for LinkedIn or if relevant */}
+        {activeTab === 'linkedin' && post.sourceLinks && post.sourceLinks.length > 0 && (
           <div className="mt-8 pt-4 border-t border-slate-100">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">Sources & References</h4>
             <div className="flex flex-wrap gap-2">
@@ -119,12 +162,12 @@ export const GeneratedPost: React.FC<GeneratedPostProps> = ({ post, onReset }) =
           {copied ? (
             <>
               <Check size={16} className="mr-2" />
-              Copied to Clipboard
+              Copied {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </>
           ) : (
             <>
               <Copy size={16} className="mr-2" />
-              Copy Post
+              Copy {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </>
           )}
         </button>

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Audience, Category, PostRequest } from '../types';
-import { AUDIENCE_OPTIONS, CATEGORY_OPTIONS, FRAMEWORKS } from '../constants';
-import { Loader2, Info, Globe } from 'lucide-react';
+import { Audience, Category, PostRequest, PostGoal, PostTone } from '../types';
+import { AUDIENCE_OPTIONS, CATEGORY_OPTIONS, GOAL_OPTIONS, TONE_OPTIONS, FRAMEWORKS, FRAMEWORK_PRO_TIPS } from '../constants';
+import { Loader2, Info, Globe, Lightbulb } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: PostRequest) => void;
@@ -14,6 +14,8 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
   const [topic, setTopic] = React.useState('');
   const [frameworkId, setFrameworkId] = React.useState('');
   const [includeNews, setIncludeNews] = React.useState(false);
+  const [goal, setGoal] = React.useState<PostGoal>(PostGoal.AUTHORITY);
+  const [tone, setTone] = React.useState<PostTone>(PostTone.ANALYTICAL);
 
   // Handle category change to reset specific framework selection
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -24,7 +26,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim()) return;
-    onSubmit({ audience, category, topic, frameworkId, includeNews });
+    onSubmit({ audience, category, topic, frameworkId, includeNews, goal, tone });
   };
 
   const currentFrameworks = FRAMEWORKS[category] || [];
@@ -37,30 +39,58 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
         
         {/* Audience Selection */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Target Audience</label>
-          <select 
+        <label className="block text-sm font-medium text-slate-700 mb-1">Target Audience</label>
+        <select 
             value={audience} 
             onChange={(e) => setAudience(e.target.value as Audience)}
             className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 bg-slate-50 border"
-          >
+        >
             {AUDIENCE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>{opt}</option>
             ))}
-          </select>
+        </select>
         </div>
 
         {/* Category Selection */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-          <select 
+        <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+        <select 
             value={category} 
             onChange={handleCategoryChange}
             className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 bg-slate-50 border"
-          >
+        >
             {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>{opt}</option>
             ))}
-          </select>
+        </select>
+        </div>
+
+        {/* Goal Selection */}
+        <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Post Goal (CTA)</label>
+        <select 
+            value={goal} 
+            onChange={(e) => setGoal(e.target.value as PostGoal)}
+            className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 bg-slate-50 border"
+        >
+            {GOAL_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+            ))}
+        </select>
+        </div>
+
+        {/* Tone Selection */}
+        <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Tone / Vibe</label>
+        <select 
+            value={tone} 
+            onChange={(e) => setTone(e.target.value as PostTone)}
+            className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 bg-slate-50 border"
+        >
+            {TONE_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+            ))}
+        </select>
         </div>
 
         {/* Specific Framework Selection */}
@@ -83,11 +113,21 @@ export const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => 
             
             {/* Contextual Help for Selected Framework */}
             {selectedFrameworkDef ? (
-                <div className="mt-2 p-3 bg-indigo-50 text-indigo-800 text-xs rounded-lg flex items-start">
-                    <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>
-                        <strong>Structure:</strong> {selectedFrameworkDef.description}
-                    </span>
+                <div className="mt-2 space-y-2">
+                    <div className="p-3 bg-indigo-50 text-indigo-800 text-xs rounded-lg flex items-start">
+                        <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                        <span>
+                            <strong>Structure:</strong> {selectedFrameworkDef.description}
+                        </span>
+                    </div>
+                    {FRAMEWORK_PRO_TIPS[selectedFrameworkDef.id] && (
+                        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-lg flex items-start border border-amber-100">
+                            <Lightbulb className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5 text-amber-600" />
+                            <span>
+                                <strong>Pro Tip:</strong> {FRAMEWORK_PRO_TIPS[selectedFrameworkDef.id]}
+                            </span>
+                        </div>
+                    )}
                 </div>
             ) : (
                  <p className="text-xs text-slate-500 mt-1">

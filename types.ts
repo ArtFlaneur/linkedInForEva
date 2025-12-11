@@ -19,12 +19,29 @@ export enum Category {
   NEWS = "News"
 }
 
+export enum PostGoal {
+  ENGAGEMENT = "Engagement / Discussion",
+  NEWSLETTER = "Newsletter Subscription",
+  CONSULTATION = "Book a Consultation",
+  EVENT = "Event Invitation",
+  AUTHORITY = "Build Authority (No Ask)"
+}
+
+export enum PostTone {
+  RANT = "🔥 Rant / Critical",
+  EMPATHIC = "🤝 Empathic / Supportive",
+  ANALYTICAL = "🧠 Analytical / Data-Driven",
+  STORYTELLER = "📖 Storyteller / Vulnerable"
+}
+
 export interface PostRequest {
   audience: Audience;
   category: Category;
   topic: string;
   frameworkId?: string; // Optional specific framework ID if the user wants to be specific
   includeNews: boolean; // New flag for grounding
+  goal: PostGoal;
+  tone: PostTone;
 }
 
 export interface SourceLink {
@@ -36,6 +53,10 @@ export interface GeneratedPost {
   title: string;
   content: string;
   shortContent?: string; // Content for X/Threads
+  telegramContent?: string; // Content for Telegram
+  instagramContent?: string; // Content for Instagram
+  youtubeContent?: string; // Content for YouTube
+  alternativeHooks?: string[]; // List of alternative opening lines
   frameworkUsed: string;
   rationale: string;
   sourceLinks?: SourceLink[]; // URLs from grounding

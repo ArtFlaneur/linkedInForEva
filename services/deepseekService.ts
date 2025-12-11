@@ -83,15 +83,25 @@ export const generateLinkedInPost = async (request: PostRequest): Promise<Genera
 TARGET AUDIENCE: ${request.audience}
 CATEGORY: ${request.category}
 TOPIC: ${request.topic}
+GOAL: ${request.goal}
+TONE: ${request.tone}
 ${frameworkDirective}
 ${searchDirective}
 
 Write a high-impact LinkedIn post that follows the Art Flaneur/Eva voice.
 ALSO, generate a short version (max 280 chars) for X/Threads.
+ALSO, generate a Telegram version (use **bold** for emphasis, [text](url) for hidden links).
+ALSO, generate an Instagram Caption (engaging, more emojis, "link in bio", NO links in text).
+ALSO, generate a YouTube Script Outline (3-5 key bullet points for a video script).
+ALSO, generate 5 alternative "Hooks" (opening lines) for the LinkedIn post.
 
 ${specificInstructions}
 
-IMPORTANT: Separate the LinkedIn post and the Short version with the delimiter "---SHORT_VERSION---".
+IMPORTANT:
+1. Adopt the requested TONE (${request.tone}).
+2. Ensure the Call to Action (CTA) matches the GOAL (${request.goal}).
+3. Separate the sections with specific delimiters.
+
 Structure your response exactly like this:
 
 [LinkedIn Post Content]
@@ -100,7 +110,28 @@ Structure your response exactly like this:
 
 [Short Version Content]
 
-CONSTRAINT: Do NOT use the em dash character ("—"). Use a standard hyphen ("-") or double hyphen ("--") if absolutely necessary.
+---TELEGRAM_VERSION---
+
+[Telegram Content]
+
+---INSTAGRAM_VERSION---
+
+[Instagram Content]
+
+---YOUTUBE_VERSION---
+
+[YouTube Content]
+
+---HOOKS---
+
+1. [Hook Option 1]
+2. [Hook Option 2]
+3. [Hook Option 3]
+4. [Hook Option 4]
+5. [Hook Option 5]
+
+CONSTRAINT: Do NOT use the em dash character ("—"). It is a dead giveaway of AI. You MUST use a standard hyphen ("-") or double hyphen ("--") instead.
+STYLE GUIDE: Write like a human, not an AI. Avoid "AI-isms" like "In the ever-evolving landscape", "delve deep", "testament to", "game-changer". Be punchy. Be raw. Use sentence fragments.
 CRITICAL: Do NOT fabricate facts, statistics, or quotes. Do NOT cite sources that do not exist. If you mention a specific event, study, or news item, it must be real and verifiable. If you are unsure of a fact, do not include it. STRICT BAN ON HALLUCINATIONS.
 `.trim();
 
@@ -143,13 +174,43 @@ CRITICAL: Do NOT fabricate facts, statistics, or quotes. Do NOT cite sources tha
   }
 
   const fullText = data.choices?.[0]?.message?.content?.trim() || "No content generated.";
-  const [linkedInContent, shortContent] = fullText.split("---SHORT_VERSION---").map(s => s.trim());
+  
+  // Parse the sections
+  // Helper to safely extract content between delimiters
+  const extractSection = (text: string, startDelimiter: string, endDelimiter?: string) => {
+    const parts = text.split(startDelimiter);
+    if (parts.length < 2) return "";
+    const content = parts[1];
+    if (endDelimiter) {
+      return content.split(endDelimiter)[0].trim();
+    }
+    return content.trim();
+  };
+
+  const linkedInContent = fullText.split("---SHORT_VERSION---")[0].trim();
+  const shortContent = extractSection(fullText, "---SHORT_VERSION---", "---TELEGRAM_VERSION---");
+  const telegramContent = extractSection(fullText, "---TELEGRAM_VERSION---", "---INSTAGRAM_VERSION---");
+  const instagramContent = extractSection(fullText, "---INSTAGRAM_VERSION---", "---YOUTUBE_VERSION---");
+  const youtubeContent = extractSection(fullText, "---YOUTUBE_VERSION---", "---HOOKS---");
+  
+  let hooks: string[] = [];
+  const hooksSection = extractSection(fullText, "---HOOKS---");
+  if (hooksSection) {
+      hooks = hooksSection.split("\n")
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(line => line.length > 0);
+  }
+
   const sourceLinks = extractLinks(linkedInContent);
 
   return {
     title: `${request.category}: ${request.topic}`,
     content: linkedInContent,
     shortContent: shortContent || undefined,
+    telegramContent: telegramContent || undefined,
+    instagramContent: instagramContent || undefined,
+    youtubeContent: youtubeContent || undefined,
+    alternativeHooks: hooks.length > 0 ? hooks : undefined,
     frameworkUsed: request.frameworkId || "Auto-detected based on content",
     rationale: "Generated via DeepSeek chat completion.",
     sourceLinks: sourceLinks.length > 0 ? sourceLinks : undefined

@@ -78,16 +78,6 @@ const App: React.FC = () => {
                     <p className="text-slate-500 mt-2">Select your audience and category to access 80+ proven frameworks.</p>
                 </div>
                 <InputForm onSubmit={handleGenerate} isLoading={isLoading} />
-                
-                <div className="mt-8 bg-indigo-900 rounded-xl p-6 text-white relative overflow-hidden">
-                   <div className="relative z-10">
-                       <h3 className="font-bold text-lg mb-2">Pro Tip</h3>
-                       <p className="text-indigo-200 text-sm">
-                           Try the "Harsh Truths" category for highest engagement on LinkedIn. It triggers the "Pattern Interrupt" psychological effect.
-                       </p>
-                   </div>
-                   <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-800 rounded-full opacity-50 blur-xl"></div>
-                </div>
             </div>
           </div>
 
